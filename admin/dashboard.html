@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — TGE</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .adm-tourney { background: var(--tge-panel); border: 1px solid var(--tge-olive); padding: 18px 20px; margin-bottom: 1px; }
+  .adm-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .adm-row .btn { padding: 9px 14px; font-size: 0.82rem; }
+  .code-chip { font-family: var(--f-mono); font-size: 0.75rem; padding: 4px 8px; border: 1px solid var(--tge-olive); margin: 3px 4px 0 0; display: inline-block; }
+  .code-chip.used { color: var(--tge-field); text-decoration: line-through; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>ADMIN DASHBOARD</small></span>
+    </a>
+    <nav class="nav-links">
+      <span id="who" style="font-family: var(--f-mono); font-size: 0.8rem; color: var(--tge-field);"></span>
+      <a href="#" id="signout-btn" class="btn-admin">Sign Out</a>
+    </nav>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head"><h2>Publish a Tournament</h2></div>
+    <form class="form-panel" id="publish-form">
+      <div class="field">
+        <label>Game</label>
+        <select name="game" required>
+          <option value="freefire">Free Fire</option>
+          <option value="pubg">PUBG Mobile / BGMI</option>
+          <option value="codm">Call of Duty Mobile</option>
+          <option value="deltaforce">Delta Force</option>
+          <option value="fortnite">Fortnite</option>
+          <option value="efootball">eFootball</option>
+          <option value="fcmobile">FC Mobile</option>
+          <option value="bloodstrike">Blood Strike</option>
+          <option value="farlight84">Farlight 84</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tournament Title</label>
+        <input type="text" name="title" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Format</label>
+          <input type="text" name="format" placeholder="e.g. Squad, Clash Squad">
+        </div>
+        <div class="field">
+          <label>Entry Type</label>
+          <select name="entryType">
+            <option value="free">Free Entry</option>
+            <option value="paid">Paid (code required)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Prize Pool</label>
+          <input type="text" name="prizePool" placeholder="e.g. ₦50,000">
+        </div>
+        <div class="field">
+          <label>Total Slots</label>
+          <input type="text" name="slots" placeholder="e.g. 32">
+        </div>
+      </div>
+      <div class="field">
+        <label>Rules / Notes</label>
+        <input type="text" name="rules" placeholder="Short summary of rules">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Publish Tournament</button>
+      <div class="form-msg" id="publish-msg"></div>
+    </form>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head"><h2>Live Tournaments</h2></div>
+    <div id="live-list"><p>Loading…</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head"><h2>Connect Links</h2></div>
+    <form class="form-panel" id="social-form" style="max-width:none;">
+      <div class="field-row">
+        <div class="field"><label>WhatsApp Channel URL</label><input type="text" name="whatsapp"></div>
+        <div class="field"><label>Discord Server URL</label><input type="text" name="discord"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Telegram URL</label><input type="text" name="telegram"></div>
+        <div class="field"><label>YouTube URL</label><input type="text" name="youtube"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Twitter / X URL</label><input type="text" name="twitter"></div>
+        <div class="field"><label>Instagram URL</label><input type="text" name="instagram"></div>
+      </div>
+      <button type="submit" class="btn btn-outline">Save Links</button>
+      <div class="form-msg" id="social-msg"></div>
+    </form>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head"><h2>Sponsor Applications</h2></div>
+    <div id="sponsor-apps"><p>Loading…</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head"><h2>Celebrity Applications</h2></div>
+    <div id="celeb-apps"><p>Loading…</p></div>
+  </div>
+</section>
+
+<script type="module">
+  import { guardAdminPage, adminSignOut, publishTournament, listLiveTournaments, crownWinner, generateCode, listCodesForTournament, getSocialLinks, saveSocialLinks, listSponsorApplications, listCelebrityApplications, approveCelebrityApplication, dismissApplication } from "../js/admin.js";
+
+  const user = await guardAdminPage();
+  document.getElementById("who").textContent = user.email;
+
+  document.getElementById("signout-btn").addEventListener("click", async (e) => {
+    e.preventDefault();
+    await adminSignOut();
+    window.location.href = "login.html";
+  });
+
+  const form = document.getElementById("publish-form");
+  const msg = document.getElementById("publish-msg");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    try {
+      await publishTournament(data);
+      msg.textContent = "Tournament published — now live on the site.";
+      msg.className = "form-msg show success";
+      form.reset();
+      renderLiveList();
+    } catch (err) {
+      msg.textContent = "Failed to publish: " + err.message;
+      msg.className = "form-msg show error";
+    }
+  });
+
+  async function renderLiveList() {
+    const listEl = document.getElementById("live-list");
+    const tournaments = await listLiveTournaments();
+    if (!tournaments.length) {
+      listEl.innerHTML = "<p>No live tournaments yet — publish one above.</p>";
+      return;
+    }
+    listEl.innerHTML = "";
+    for (const t of tournaments) {
+      const div = document.createElement("div");
+      div.className = "adm-tourney";
+      div.innerHTML = `
+        <h3 style="margin:0 0 4px;font-size:1.05rem;">${t.title} <span style="font-family:var(--f-mono);font-size:0.72rem;color:var(--tge-field);">· ${t.game} · ${t.entryType.toUpperCase()}</span></h3>
+        <div class="tourney-meta"><span>Prize: ${t.prizePool || "TBA"}</span><span>Slots: ${t.slotsFilled ?? 0}/${t.slots || "—"}</span></div>
+        <div class="adm-row">
+          <button class="btn btn-outline crown-btn">Crown Winner</button>
+          ${t.entryType === "paid" ? '<button class="btn btn-outline gen-code-btn">Generate Code</button>' : ""}
+        </div>
+        <div class="codes-list"></div>
+      `;
+      div.querySelector(".crown-btn").addEventListener("click", async () => {
+        const winner = prompt(`Winner team name for "${t.title}"?`);
+        if (!winner) return;
+        await crownWinner(t.id, winner);
+        renderLiveList();
+      });
+      const genBtn = div.querySelector(".gen-code-btn");
+      if (genBtn) {
+        genBtn.addEventListener("click", async () => {
+          const code = await generateCode(t.id, t.game.slice(0, 2));
+          alert(`Code generated: ${code}\n\nShare this with one team — it works once.`);
+          renderCodes(t.id, div.querySelector(".codes-list"));
+        });
+      }
+      renderCodes(t.id, div.querySelector(".codes-list"));
+      listEl.appendChild(div);
+    }
+  }
+
+  async function renderCodes(tournamentId, el) {
+    if (!el) return;
+    const codes = await listCodesForTournament(tournamentId);
+    if (!codes.length) { el.innerHTML = ""; return; }
+    el.innerHTML = "<div style='margin-top:10px;'>" + codes.map(c =>
+      `<span class="code-chip ${c.used ? "used" : ""}">${c.id}</span>`
+    ).join("") + "</div>";
+  }
+
+  renderLiveList();
+
+  // Connect links
+  const socialForm = document.getElementById("social-form");
+  const socialMsg = document.getElementById("social-msg");
+  getSocialLinks().then(links => {
+    Object.entries(links).forEach(([key, val]) => {
+      const input = socialForm.querySelector(`[name="${key}"]`);
+      if (input) input.value = val;
+    });
+  });
+  socialForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(socialForm).entries());
+    await saveSocialLinks(data);
+    socialMsg.textContent = "Links saved.";
+    socialMsg.className = "form-msg show success";
+  });
+
+  // Sponsor applications
+  async function renderSponsorApps() {
+    const el = document.getElementById("sponsor-apps");
+    const apps = await listSponsorApplications();
+    const pending = apps.filter(a => a.status === "pending");
+    if (!pending.length) { el.innerHTML = "<p>No pending sponsor applications.</p>"; return; }
+    el.innerHTML = pending.map(a => `
+      <div class="adm-tourney">
+        <h3 style="margin:0 0 4px;font-size:1rem;">${a.brandName} — ${a.tier}</h3>
+        <div class="tourney-meta"><span>${a.contactName}</span><span>${a.whatsapp}</span><span>${a.interest || ""}</span></div>
+        <div class="adm-row"><button class="btn btn-outline dismiss-btn" data-id="${a.id}">Mark Handled</button></div>
+      </div>
+    `).join("");
+    el.querySelectorAll(".dismiss-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await dismissApplication("sponsorApplications", btn.dataset.id);
+        renderSponsorApps();
+      });
+    });
+  }
+  renderSponsorApps();
+
+  // Celebrity applications
+  async function renderCelebApps() {
+    const el = document.getElementById("celeb-apps");
+    const apps = await listCelebrityApplications();
+    const pending = apps.filter(a => a.status === "pending");
+    if (!pending.length) { el.innerHTML = "<p>No pending celebrity applications.</p>"; return; }
+    el.innerHTML = pending.map(a => `
+      <div class="adm-tourney">
+        <h3 style="margin:0 0 4px;font-size:1rem;">${a.name} — ${a.game}</h3>
+        <div class="tourney-meta"><span>${a.whatsapp}</span><span>${a.social || ""}</span></div>
+        <p style="margin:8px 0 0;font-size:0.85rem;">${a.pitch || ""}</p>
+        <div class="adm-row">
+          <button class="btn btn-primary approve-btn" data-id="${a.id}" data-name="${a.name}" data-game="${a.game}">Approve & Feature</button>
+          <button class="btn btn-outline dismiss-btn" data-id="${a.id}">Dismiss</button>
+        </div>
+      </div>
+    `).join("");
+    el.querySelectorAll(".approve-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await approveCelebrityApplication({ id: btn.dataset.id, name: btn.dataset.name, game: btn.dataset.game });
+        renderCelebApps();
+      });
+    });
+    el.querySelectorAll(".dismiss-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await dismissApplication("celebrityApplications", btn.dataset.id);
+        renderCelebApps();
+      });
+    });
+  }
+  renderCelebApps();
+</script>
+</body>
+  </html>
