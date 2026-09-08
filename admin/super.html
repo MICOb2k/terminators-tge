@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin — TGE</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .admin-chip { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--tge-panel); border: 1px solid var(--tge-olive); margin-bottom: 1px; }
+  .admin-chip span { font-family: var(--f-mono); font-size: 0.85rem; }
+  .admin-chip button { background: transparent; border: 1px solid var(--tge-blaze); color: var(--tge-blaze); padding: 6px 12px; font-family: var(--f-mono); font-size: 0.72rem; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>SUPER ADMIN</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="dashboard.html" class="btn-admin">Tournament Dashboard</a>
+      <a href="#" id="signout-btn" class="btn-admin">Sign Out</a>
+    </nav>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="hero-tag">SUPER ADMIN · FULL CONTROL</div>
+    <div class="section-head"><h2>Approved Admins</h2></div>
+
+    <div class="form-panel" style="max-width:none; margin-bottom: 28px;">
+      <div class="field" style="display:flex; gap:10px; align-items:flex-end; margin-bottom:0;">
+        <div style="flex:1;">
+          <label>Add Admin by Gmail</label>
+          <input type="text" id="new-admin-email" placeholder="someone@gmail.com">
+        </div>
+        <button id="add-admin-btn" class="btn btn-primary">Add</button>
+      </div>
+      <div class="form-msg" id="admin-msg"></div>
+    </div>
+
+    <div id="admin-list"><p>Loading…</p></div>
+  </div>
+</section>
+
+<div class="hazard-rule"></div>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Publish &amp; Manage Tournaments</h2>
+      <a href="dashboard.html" class="see-all">OPEN FULL DASHBOARD →</a>
+    </div>
+    <p>Publishing, crowning winners, and generating access codes all happen on the shared Tournament Dashboard — the same one every approved admin uses.</p>
+  </div>
+</section>
+
+<script type="module">
+  import { guardAdminPage, adminSignOut, addAdmin, removeAdmin, listAdmins } from "../js/admin.js";
+
+  const user = await guardAdminPage({ requireSuper: true });
+
+  document.getElementById("signout-btn").addEventListener("click", async (e) => {
+    e.preventDefault();
+    await adminSignOut();
+    window.location.href = "login.html";
+  });
+
+  const msg = document.getElementById("admin-msg");
+  function showMsg(text, type) {
+    msg.textContent = text;
+    msg.className = `form-msg show ${type}`;
+  }
+
+  async function renderAdmins() {
+    const listEl = document.getElementById("admin-list");
+    const admins = await listAdmins();
+    if (!admins.length) {
+      listEl.innerHTML = "<p>No admins approved yet — add one above.</p>";
+      return;
+    }
+    listEl.innerHTML = "";
+    admins.forEach(email => {
+      const div = document.createElement("div");
+      div.className = "admin-chip";
+      div.innerHTML = `<span>${email}</span><button>Revoke</button>`;
+      div.querySelector("button").addEventListener("click", async () => {
+        if (!confirm(`Revoke admin access for ${email}?`)) return;
+        await removeAdmin(email);
+        renderAdmins();
+      });
+      listEl.appendChild(div);
+    });
+  }
+
+  document.getElementById("add-admin-btn").addEventListener("click", async () => {
+    const input = document.getElementById("new-admin-email");
+    const email = input.value.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      showMsg("Enter a valid Gmail address.", "error");
+      return;
+    }
+    await addAdmin(email);
+    showMsg(`${email} approved for admin access.`, "success");
+    input.value = "";
+    renderAdmins();
+  });
+
+  renderAdmins();
+</script>
+</body>
+</html>
