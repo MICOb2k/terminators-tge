@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call of Duty Mobile Tournaments — TGE</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>GLOBAL ESPORTS</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="../index.html#games">Games</a>
+      <a href="../hall-of-fame.html">Hall of Fame</a>
+      <a href="../leaderboard.html">Leaderboard</a>
+      <a href="../connect.html">Connect</a>
+      <a href="../admin/login.html" class="btn-admin">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding: 56px 0 40px;">
+  <div class="container">
+    <div class="hero-tag">GAME 03 · CALL OF DUTY MOBILE</div>
+    <h1 style="max-width: 12ch; font-size: clamp(2rem, 6vw, 3.2rem);">COD Mobile Tournaments</h1>
+    <p>Battle Royale and Multiplayer modes. Best-of-3 and Best-of-5 match formats.</p>
+  </div>
+</section>
+
+<div class="hazard-rule"></div>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Live Tournaments</h2>
+      <span class="see-all" id="live-count-label">LOADING…</span>
+    </div>
+    <div class="tourney-list" id="tourney-list">
+      <div class="tourney-card"><div></div><p style="margin:0;">Loading live tournaments…</p><div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="register">
+  <div class="container">
+    <div class="section-head"><h2>Register Your Team</h2></div>
+
+    <form class="form-panel" id="reg-form">
+      <div class="field">
+        <label>Tournament</label>
+        <select name="tournamentId" required></select>
+      </div>
+
+      <div class="field code-field" style="display:none;">
+        <label>Access Code <span style="color:var(--tge-blaze)">(required — paid entry)</span></label>
+        <input type="text" name="code" placeholder="e.g. TGE-CO-8X4K" style="text-transform:uppercase;">
+        <div class="hint">Get this from the admin who invited you or your WhatsApp channel announcement.</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Mode</label>
+          <select name="format">
+            <option value="Battle Royale">Battle Royale</option>
+            <option value="Multiplayer">Multiplayer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Match Format</label>
+          <select name="matchFormat">
+            <option value="Best of 3">Best of 3</option>
+            <option value="Best of 5">Best of 5</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Team Name</label>
+        <input type="text" name="teamName" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Leader In-Game Name</label>
+          <input type="text" name="leaderName" required>
+        </div>
+        <div class="field">
+          <label>Leader UID</label>
+          <input type="text" name="leaderUID" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Preferred Loadout / Class</label>
+        <input type="text" name="loadout" placeholder="e.g. SMG rush, sniper support">
+      </div>
+
+      <div class="field">
+        <label>WhatsApp Number <span style="color:var(--tge-blaze)">(required)</span></label>
+        <input type="tel" name="whatsapp" placeholder="+234..." required>
+      </div>
+
+      <div class="field contact-group">
+        <div class="contact-req">Supply at least 2 of the 3 below</div>
+        <div class="field">
+          <label>Instagram</label>
+          <input type="text" name="instagram" placeholder="@username">
+        </div>
+        <div class="field">
+          <label>Telegram</label>
+          <input type="text" name="telegram" placeholder="@username">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Discord <span style="color:var(--tge-field)">(optional)</span></label>
+          <input type="text" name="discord" placeholder="username#0000">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Team Logo</label>
+        <input type="file" name="logo" accept="image/*" style="display:none;" id="logo-input">
+        <label for="logo-input" class="logo-drop">Tap to upload team logo (auto-compressed)</label>
+        <img class="logo-preview" style="display:none;">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Submit Registration</button>
+      <div class="form-msg" id="form-msg"></div>
+    </form>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-note">© 2026 TERMINATORS GLOBAL ESPORTS — TGE</div>
+    <div class="footer-links">
+      <a href="../connect.html">Connect</a>
+      <a href="../sponsor.html">Sponsor</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  import { loadTournamentOptions, initRegistrationForm } from "../js/register.js";
+
+  const selectEl = document.querySelector('[name="tournamentId"]');
+  const listEl = document.getElementById("tourney-list");
+  const countLabel = document.getElementById("live-count-label");
+  const form = document.getElementById("reg-form");
+  const msgEl = document.getElementById("form-msg");
+
+  loadTournamentOptions("codm", selectEl, listEl).then(map => {
+    countLabel.textContent = `${Object.keys(map).length} LIVE`;
+    initRegistrationForm("codm", form, map, msgEl);
+  });
+</script>
+</body>
+  </html>
