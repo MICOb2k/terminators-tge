@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — TGE</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>GLOBAL ESPORTS</small></span>
+    </a>
+  </div>
+</header>
+
+<section class="section" style="padding-top: 90px;">
+  <div class="container" style="max-width: 440px;">
+    <div class="hero-tag">RESTRICTED ACCESS</div>
+    <h2>Admin Login</h2>
+    <p style="margin-bottom: 30px;">Sign in with the Gmail address the super admin approved for you.</p>
+
+    <div class="form-panel" style="max-width:none;">
+      <button id="google-btn" class="btn btn-primary btn-block">Continue with Google</button>
+      <div class="form-msg" id="login-msg"></div>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+  import { googleSignIn, isApprovedAdmin, isSuperAdmin } from "../js/admin.js";
+  import { auth } from "../js/firebase-config.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
+  const btn = document.getElementById("google-btn");
+  const msg = document.getElementById("login-msg");
+
+  function showMsg(text, type) {
+    msg.textContent = text;
+    msg.className = `form-msg show ${type}`;
+  }
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "Signing in…";
+    try {
+      const result = await googleSignIn();
+      const user = result.user;
+      if (isSuperAdmin(user)) {
+        window.location.href = "super.html";
+        return;
+      }
+      const approved = await isApprovedAdmin(user);
+      if (approved) {
+        window.location.href = "dashboard.html";
+      } else {
+        showMsg(`${user.email} isn't approved for admin access yet. Ask the super admin to add you.`, "error");
+        btn.disabled = false;
+        btn.textContent = "Continue with Google";
+      }
+    } catch (e) {
+      showMsg("Sign-in failed. Please try again.", "error");
+      btn.disabled = false;
+      btn.textContent = "Continue with Google";
+    }
+  });
+
+  // If already signed in and approved, skip straight through.
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    if (isSuperAdmin(user)) { window.location.href = "super.html"; return; }
+    if (await isApprovedAdmin(user)) window.location.href = "dashboard.html";
+  });
+</script>
+</body>
+</html>
