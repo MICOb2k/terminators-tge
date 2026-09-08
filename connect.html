@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect — TGE</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .social-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 2px; background: var(--tge-olive); border: 1px solid var(--tge-olive); }
+  .social-card { background: var(--tge-panel); padding: 26px 22px; display: block; }
+  .social-card:hover { background: var(--tge-panel-2); }
+  .social-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .social-card span { font-family: var(--f-mono); font-size: 0.75rem; color: var(--tge-field); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>GLOBAL ESPORTS</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#games">Games</a>
+      <a href="hall-of-fame.html">Hall of Fame</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="connect.html">Connect</a>
+      <a href="admin/login.html" class="btn-admin">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding: 56px 0 40px;">
+  <div class="container">
+    <div class="hero-tag">STAY IN THE LOOP</div>
+    <h1 style="font-size: clamp(2rem, 6vw, 3.2rem);">Connect With TGE</h1>
+    <p>Tournament announcements, room IDs, and results drop here first.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="social-grid" id="social-grid">
+      <div class="social-card"><span>LOADING</span></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-note">© 2026 TERMINATORS GLOBAL ESPORTS — TGE</div>
+  </div>
+</footer>
+
+<script type="module">
+  import { db } from "./js/firebase-config.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+  const PLATFORM_LABELS = {
+    whatsapp: "WhatsApp Channel",
+    discord: "Discord Server",
+    telegram: "Telegram Channel",
+    youtube: "YouTube",
+    twitter: "Twitter / X",
+    instagram: "Instagram"
+  };
+
+  async function load() {
+    const grid = document.getElementById("social-grid");
+    const snap = await getDoc(doc(db, "settings", "social"));
+    const links = snap.exists() ? snap.data() : {};
+    const entries = Object.entries(PLATFORM_LABELS).filter(([key]) => links[key]);
+    if (!entries.length) {
+      grid.innerHTML = `<div class="social-card"><span>LINKS NOT SET YET</span><h3>Check back soon</h3></div>`;
+      return;
+    }
+    grid.innerHTML = entries.map(([key, label]) => `
+      <a href="${links[key]}" target="_blank" rel="noopener" class="social-card">
+        <span>${label.toUpperCase()}</span>
+        <h3>${label}</h3>
+      </a>
+    `).join("");
+  }
+
+  load();
+</script>
+</body>
+</html>

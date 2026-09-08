@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hall of Fame — TGE</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .hof-card { background: var(--tge-panel); border: 1px solid var(--tge-olive); padding: 22px; display: grid; grid-template-columns: 60px 1fr auto; gap: 18px; align-items: center; margin-bottom: 1px; }
+  .hof-card img { width: 60px; height: 60px; object-fit: cover; border: 1px solid var(--tge-olive); }
+  .hof-card .placeholder { width: 60px; height: 60px; background: var(--tge-olive); }
+  .game-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+  .game-filter button { background: transparent; border: 1px solid var(--tge-olive); color: var(--tge-bone-dim); padding: 7px 14px; font-family: var(--f-mono); font-size: 0.75rem; cursor: pointer; }
+  .game-filter button.active { border-color: var(--tge-blaze); color: var(--tge-blaze); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>GLOBAL ESPORTS</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#games">Games</a>
+      <a href="hall-of-fame.html">Hall of Fame</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="connect.html">Connect</a>
+      <a href="admin/login.html" class="btn-admin">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding: 56px 0 40px;">
+  <div class="container">
+    <div class="hero-tag">HALL OF FAME</div>
+    <h1 style="font-size: clamp(2rem, 6vw, 3.2rem);">Every Crowned Champion</h1>
+    <p>Once a winner is crowned, the tournament comes off the live board and its team gets a permanent line here.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="game-filter" id="game-filter">
+      <button data-game="" class="active">All Games</button>
+      <button data-game="freefire">Free Fire</button>
+      <button data-game="pubg">PUBG Mobile</button>
+      <button data-game="codm">COD Mobile</button>
+      <button data-game="deltaforce">Delta Force</button>
+      <button data-game="fortnite">Fortnite</button>
+      <button data-game="efootball">eFootball</button>
+      <button data-game="fcmobile">FC Mobile</button>
+      <button data-game="bloodstrike">Blood Strike</button>
+      <button data-game="farlight84">Farlight 84</button>
+    </div>
+    <div id="hof-list"><p>Loading winners…</p></div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-note">© 2026 TERMINATORS GLOBAL ESPORTS — TGE</div>
+    <div class="footer-links">
+      <a href="connect.html">Connect</a>
+      <a href="sponsor.html">Sponsor</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  import { db } from "./js/firebase-config.js";
+  import { collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+  let allWinners = [];
+
+  async function load() {
+    const listEl = document.getElementById("hof-list");
+    const q = query(collection(db, "tournaments"), where("status", "==", "ended"), orderBy("endedAt", "desc"));
+    const snap = await getDocs(q);
+    allWinners = [];
+    snap.forEach(d => allWinners.push({ id: d.id, ...d.data() }));
+    render("");
+  }
+
+  function render(gameFilter) {
+    const listEl = document.getElementById("hof-list");
+    const filtered = gameFilter ? allWinners.filter(w => w.game === gameFilter) : allWinners;
+    if (!filtered.length) {
+      listEl.innerHTML = "<p>No champions crowned yet in this category — check back soon.</p>";
+      return;
+    }
+    listEl.innerHTML = filtered.map(t => `
+      <div class="hof-card">
+        ${t.winnerLogoUrl ? `<img src="${t.winnerLogoUrl}" alt="">` : `<div class="placeholder"></div>`}
+        <div>
+          <h3 style="margin:0 0 4px;font-size:1.05rem;">${t.winnerName || "TBD"}</h3>
+          <div class="tourney-meta"><span>${t.game}</span><span>${t.title}</span></div>
+        </div>
+        <span class="tourney-badge free">CHAMPION</span>
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("game-filter").addEventListener("click", (e) => {
+    if (e.target.tagName !== "BUTTON") return;
+    document.querySelectorAll("#game-filter button").forEach(b => b.classList.remove("active"));
+    e.target.classList.add("active");
+    render(e.target.dataset.game);
+  });
+
+  load();
+</script>
+</body>
+</html>

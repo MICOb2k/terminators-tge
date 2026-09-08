@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponsor Us — TGE</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 2px; background: var(--tge-olive); border: 1px solid var(--tge-olive); margin-bottom: 40px; }
+  .tier-card { background: var(--tge-panel); padding: 20px; }
+  .tier-card h3 { font-size: 1rem; color: var(--tge-blaze); margin-bottom: 8px; }
+  .tier-card ul { margin: 0; padding-left: 18px; color: var(--tge-bone-dim); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>GLOBAL ESPORTS</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#games">Games</a>
+      <a href="hall-of-fame.html">Hall of Fame</a>
+      <a href="connect.html">Connect</a>
+      <a href="admin/login.html" class="btn-admin">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding: 56px 0 40px;">
+  <div class="container">
+    <div class="hero-tag">PARTNER WITH TGE</div>
+    <h1 style="font-size: clamp(2rem, 6vw, 3.2rem);">Sponsor a Tournament</h1>
+    <p>Put your brand in front of active mobile esports teams across 9 games. Pick a tier and tell us about you.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="tier-grid">
+      <div class="tier-card">
+        <h3>Shoutout</h3>
+        <ul><li>Named mention on the tournament page</li><li>Social media shoutout</li></ul>
+      </div>
+      <div class="tier-card">
+        <h3>Logo Placement</h3>
+        <ul><li>Logo on tournament card</li><li>Logo in stream overlay slot</li></ul>
+      </div>
+      <div class="tier-card">
+        <h3>Title Sponsor</h3>
+        <ul><li>"Presented by" naming</li><li>Banner across the tournament</li><li>Full social package</li></ul>
+      </div>
+    </div>
+
+    <form class="form-panel" id="sponsor-form">
+      <div class="field">
+        <label>Brand / Sponsor Name</label>
+        <input type="text" name="brandName" required>
+      </div>
+      <div class="field">
+        <label>Tier Interested In</label>
+        <select name="tier">
+          <option value="Shoutout">Shoutout</option>
+          <option value="Logo Placement">Logo Placement</option>
+          <option value="Title Sponsor">Title Sponsor</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Contact Name</label>
+        <input type="text" name="contactName" required>
+      </div>
+      <div class="field">
+        <label>WhatsApp Number</label>
+        <input type="tel" name="whatsapp" required>
+      </div>
+      <div class="field">
+        <label>Email (optional)</label>
+        <input type="text" name="email">
+      </div>
+      <div class="field">
+        <label>Which game(s) or tournament are you interested in?</label>
+        <input type="text" name="interest" placeholder="e.g. Free Fire tournaments, all games">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Submit Sponsorship Request</button>
+      <div class="form-msg" id="form-msg"></div>
+    </form>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-note">© 2026 TERMINATORS GLOBAL ESPORTS — TGE</div>
+  </div>
+</footer>
+
+<script type="module">
+  import { db } from "./js/firebase-config.js";
+  import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+  const form = document.getElementById("sponsor-form");
+  const msg = document.getElementById("form-msg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('[type="submit"]');
+    const data = Object.fromEntries(new FormData(form).entries());
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+    try {
+      await addDoc(collection(db, "sponsorApplications"), { ...data, status: "pending", createdAt: serverTimestamp() });
+      msg.textContent = "Thanks — we'll reach out on WhatsApp soon.";
+      msg.className = "form-msg show success";
+      form.reset();
+    } catch (err) {
+      msg.textContent = "Something went wrong, please try again.";
+      msg.className = "form-msg show error";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Submit Sponsorship Request";
+    }
+  });
+</script>
+</body>
+</html>

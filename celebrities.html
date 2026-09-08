@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Celebrities — TGE</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .celeb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 2px; background: var(--tge-olive); border: 1px solid var(--tge-olive); margin-bottom: 50px; }
+  .celeb-card { background: var(--tge-panel); padding: 20px; text-align: center; }
+  .celeb-card img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 1px solid var(--tge-olive); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>GLOBAL ESPORTS</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#games">Games</a>
+      <a href="hall-of-fame.html">Hall of Fame</a>
+      <a href="connect.html">Connect</a>
+      <a href="admin/login.html" class="btn-admin">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding: 56px 0 40px;">
+  <div class="container">
+    <div class="hero-tag">FEATURED PLAYERS</div>
+    <h1 style="font-size: clamp(2rem, 6vw, 3.2rem);">Celebrities & Role Models</h1>
+    <p>Featured players across our games — apply below if you'd like to be considered.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="celeb-grid" id="celeb-grid">
+      <div class="celeb-card">Loading…</div>
+    </div>
+
+    <div class="section-head"><h2>Apply to Be Featured</h2></div>
+    <form class="form-panel" id="celeb-form">
+      <div class="field">
+        <label>Full Name / IGN</label>
+        <input type="text" name="name" required>
+      </div>
+      <div class="field">
+        <label>Main Game</label>
+        <input type="text" name="game" placeholder="e.g. Free Fire" required>
+      </div>
+      <div class="field">
+        <label>WhatsApp Number</label>
+        <input type="tel" name="whatsapp" required>
+      </div>
+      <div class="field">
+        <label>Instagram / Social Handle</label>
+        <input type="text" name="social" placeholder="@username">
+      </div>
+      <div class="field">
+        <label>Why should we feature you?</label>
+        <input type="text" name="pitch">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Submit Application</button>
+      <div class="form-msg" id="form-msg"></div>
+    </form>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-note">© 2026 TERMINATORS GLOBAL ESPORTS — TGE</div>
+  </div>
+</footer>
+
+<script type="module">
+  import { db } from "./js/firebase-config.js";
+  import { collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+  async function loadCelebs() {
+    const grid = document.getElementById("celeb-grid");
+    const snap = await getDocs(collection(db, "celebrities"));
+    if (snap.empty) {
+      grid.innerHTML = `<div class="celeb-card">No celebrities featured yet — be the first to apply below.</div>`;
+      return;
+    }
+    let html = "";
+    snap.forEach(d => {
+      const c = d.data();
+      html += `
+        <div class="celeb-card">
+          ${c.photoUrl ? `<img src="${c.photoUrl}">` : ""}
+          <h3 style="font-size:0.95rem;margin:0 0 4px;">${c.name}</h3>
+          <span style="font-family:var(--f-mono);font-size:0.72rem;color:var(--tge-field);">${c.game}</span>
+        </div>`;
+    });
+    grid.innerHTML = html;
+  }
+
+  const form = document.getElementById("celeb-form");
+  const msg = document.getElementById("form-msg");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('[type="submit"]');
+    const data = Object.fromEntries(new FormData(form).entries());
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+    try {
+      await addDoc(collection(db, "celebrityApplications"), { ...data, status: "pending", createdAt: serverTimestamp() });
+      msg.textContent = "Application submitted — we'll reach out if selected.";
+      msg.className = "form-msg show success";
+      form.reset();
+    } catch (err) {
+      msg.textContent = "Something went wrong, please try again.";
+      msg.className = "form-msg show error";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Submit Application";
+    }
+  });
+
+  loadCelebs();
+</script>
+</body>
+</html>

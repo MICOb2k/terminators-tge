@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard — TGE</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .lb-row { display: grid; grid-template-columns: 50px 1fr auto; gap: 16px; align-items: center; background: var(--tge-panel); border: 1px solid var(--tge-olive); padding: 16px 20px; margin-bottom: 1px; }
+  .lb-rank { font-family: var(--f-display); font-size: 1.3rem; color: var(--tge-field); }
+  .lb-row:nth-child(1) .lb-rank { color: var(--tge-blaze); }
+  .lb-wins { font-family: var(--f-mono); font-size: 0.85rem; color: var(--tge-live); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="mark"></span>
+      <span>TERMINATORS<br><small>GLOBAL ESPORTS</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#games">Games</a>
+      <a href="hall-of-fame.html">Hall of Fame</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="connect.html">Connect</a>
+      <a href="admin/login.html" class="btn-admin">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding: 56px 0 40px;">
+  <div class="container">
+    <div class="hero-tag">GLOBAL LEADERBOARD</div>
+    <h1 style="font-size: clamp(2rem, 6vw, 3.2rem);">Most Championships</h1>
+    <p>Ranked by total tournament wins across every game on TGE.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div id="lb-list"><p>Loading standings…</p></div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-note">© 2026 TERMINATORS GLOBAL ESPORTS — TGE</div>
+    <div class="footer-links">
+      <a href="connect.html">Connect</a>
+      <a href="sponsor.html">Sponsor</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  import { db } from "./js/firebase-config.js";
+  import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+  async function load() {
+    const listEl = document.getElementById("lb-list");
+    const q = query(collection(db, "tournaments"), where("status", "==", "ended"));
+    const snap = await getDocs(q);
+    const counts = {};
+    snap.forEach(d => {
+      const w = d.data().winnerName;
+      if (!w) return;
+      counts[w] = (counts[w] || 0) + 1;
+    });
+    const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    if (!ranked.length) {
+      listEl.innerHTML = "<p>No championships recorded yet — the board fills up as tournaments end.</p>";
+      return;
+    }
+    listEl.innerHTML = ranked.map(([name, wins], i) => `
+      <div class="lb-row">
+        <div class="lb-rank">#${i + 1}</div>
+        <div>${name}</div>
+        <div class="lb-wins">${wins} WIN${wins > 1 ? "S" : ""}</div>
+      </div>
+    `).join("");
+  }
+
+  load();
+</script>
+</body>
+</html>
