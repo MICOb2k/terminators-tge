@@ -4,8 +4,8 @@
 
 const CACHE_NAME = "tge-shell-v1";
 const SHELL_FILES = [
-  "/index.html",
-  "/css/style.css"
+  "./index.html",
+  "./css/style.css"
 ];
 
 self.addEventListener("install", (event) => {
