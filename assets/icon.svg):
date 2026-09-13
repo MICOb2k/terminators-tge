@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full-bleed dark background so this stays safe as a maskable icon -->
+  <rect width="512" height="512" fill="#0B0D0A"/>
+
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#FF4D1C" stroke-width="14"/>
+
+  <!-- Crosshair ticks -->
+  <rect x="246" y="34" width="20" height="60" fill="#FF4D1C"/>
+  <rect x="246" y="418" width="20" height="60" fill="#FF4D1C"/>
+  <rect x="34" y="246" width="60" height="20" fill="#FF4D1C"/>
+  <rect x="418" y="246" width="60" height="20" fill="#FF4D1C"/>
+
+  <!-- Center emblem: the brand's angled flag/blaze mark, scaled up -->
+  <polygon points="176,176 336,176 336,286 262,356 176,356"
+           fill="#FF4D1C"/>
+  <polygon points="176,176 336,176 336,286 262,356 176,356"
+           fill="none" stroke="#0B0D0A" stroke-width="6"/>
+
+  <!-- Inner reticle dot -->
+  <circle cx="256" cy="256" r="10" fill="#0B0D0A"/>
+</svg>
