@@ -51,7 +51,7 @@ loadStats();
 loadHallOfFamePreview();
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {
+  navigator.serviceWorker.register("sw.js").catch(() => {
     // Non-fatal — site still works without the installable-app layer.
   });
 }
