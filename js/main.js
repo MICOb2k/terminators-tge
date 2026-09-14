@@ -55,25 +55,3 @@ if ("serviceWorker" in navigator) {
     // Non-fatal — site still works without the installable-app layer.
   });
 }
-
-// ---------------- PWA "Install App" button ----------------
-// Browsers fire this event only when the site qualifies as installable
-// (manifest + service worker present, which TGE already has).
-let deferredInstallPrompt = null;
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  const btn = document.getElementById("install-app-btn");
-  if (btn) btn.classList.add("show");
-});
-
-const installBtn = document.getElementById("install-app-btn");
-if (installBtn) {
-  installBtn.addEventListener("click", async () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    installBtn.classList.remove("show");
-  });
-}
