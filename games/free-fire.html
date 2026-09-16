@@ -20,11 +20,13 @@
       <a href="../leaderboard.html">Leaderboard</a>
       <a href="../connect.html">Connect</a>
       <a href="../admin/login.html" class="btn-admin">Admin</a>
+      <button id="install-app-btn" class="btn-admin install-btn">📲 Install</button>
     </nav>
   </div>
 </header>
 
 <section class="hero" style="padding: 56px 0 40px;">
+  <canvas id="aura-canvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
   <div class="container">
     <div class="hero-tag">GAME 01 · FREE FIRE</div>
     <h1 style="max-width: 12ch; font-size: clamp(2rem, 6vw, 3.2rem);">Free Fire Tournaments</h1>
@@ -91,24 +93,53 @@
         </div>
       </div>
 
+      <div class="field" id="squad-roster" style="display:none; border:1px solid var(--tge-olive); padding:16px;">
+        <label style="color:var(--tge-blaze);">Squad Roster — 4 Players Required</label>
+        <div class="field-row">
+          <div class="field"><label>Player 1 IGN</label><input type="text" name="player1_ign"></div>
+          <div class="field"><label>Player 1 UID</label><input type="text" name="player1_uid"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Player 2 IGN</label><input type="text" name="player2_ign"></div>
+          <div class="field"><label>Player 2 UID</label><input type="text" name="player2_uid"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Player 3 IGN</label><input type="text" name="player3_ign"></div>
+          <div class="field"><label>Player 3 UID</label><input type="text" name="player3_uid"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Player 4 IGN</label><input type="text" name="player4_ign"></div>
+          <div class="field"><label>Player 4 UID</label><input type="text" name="player4_uid"></div>
+        </div>
+        <label style="margin-top:14px;color:var(--tge-field);">Substitutes — Up To 2 (optional)</label>
+        <div class="field-row">
+          <div class="field"><label>Sub 1 IGN</label><input type="text" name="sub1_ign"></div>
+          <div class="field"><label>Sub 1 UID</label><input type="text" name="sub1_uid"></div>
+        </div>
+        <div class="field-row" style="margin-bottom:0;">
+          <div class="field" style="margin-bottom:0;"><label>Sub 2 IGN</label><input type="text" name="sub2_ign"></div>
+          <div class="field" style="margin-bottom:0;"><label>Sub 2 UID</label><input type="text" name="sub2_uid"></div>
+        </div>
+      </div>
+
       <div class="field">
         <label>WhatsApp Number <span style="color:var(--tge-blaze)">(required)</span></label>
         <input type="tel" name="whatsapp" placeholder="+234..." required>
       </div>
 
       <div class="field contact-group">
-        <div class="contact-req">Supply at least 2 of the 3 below</div>
-        <div class="field">
-          <label>Instagram</label>
-          <input type="text" name="instagram" placeholder="@username">
+        <div class="contact-req">All optional — but supply at least 2 of the following</div>
+        <div class="field-row">
+          <div class="field"><label>Instagram</label><input type="text" name="instagram" placeholder="@username"></div>
+          <div class="field"><label>Telegram</label><input type="text" name="telegram" placeholder="@username"></div>
         </div>
-        <div class="field">
-          <label>Telegram</label>
-          <input type="text" name="telegram" placeholder="@username">
+        <div class="field-row">
+          <div class="field"><label>Discord</label><input type="text" name="discord" placeholder="username#0000"></div>
+          <div class="field"><label>TikTok</label><input type="text" name="tiktok" placeholder="@username"></div>
         </div>
-        <div class="field" style="margin-bottom:0;">
-          <label>Discord <span style="color:var(--tge-field)">(optional)</span></label>
-          <input type="text" name="discord" placeholder="username#0000">
+        <div class="field-row" style="margin-bottom:0;">
+          <div class="field" style="margin-bottom:0;"><label>Facebook</label><input type="text" name="facebook" placeholder="Profile name or link"></div>
+          <div class="field" style="margin-bottom:0;"><label>Twitter / X</label><input type="text" name="twitter" placeholder="@username"></div>
         </div>
       </div>
 
@@ -128,6 +159,7 @@
 <footer class="site-footer">
   <div class="container">
     <div class="footer-note">© 2026 TERMINATORS GLOBAL ESPORTS — TGE</div>
+    <div class="founder-credit">FOUNDED BY M I C O</div>
     <div class="footer-links">
       <a href="../connect.html">Connect</a>
       <a href="../sponsor.html">Sponsor</a>
@@ -144,10 +176,42 @@
   const form = document.getElementById("reg-form");
   const msgEl = document.getElementById("form-msg");
 
+  // Squad roster: 4 required players + 2 optional subs, only for Squad format
+  const formatSelect = form.querySelector('[name="format"]');
+  const squadRoster = document.getElementById("squad-roster");
+  function toggleSquadRoster() {
+    const isSquad = formatSelect.value === "Squad";
+    squadRoster.style.display = isSquad ? "block" : "none";
+    ["player1_ign","player1_uid","player2_ign","player2_uid","player3_ign","player3_uid","player4_ign","player4_uid"].forEach(name => {
+      const input = form.querySelector(`[name="${name}"]`);
+      if (input) input.required = isSquad;
+    });
+  }
+  formatSelect.addEventListener("change", toggleSquadRoster);
+  toggleSquadRoster();
+
+  // When a tournament is picked, auto-match the format dropdown to what
+  // admin published for it — so Squad tournaments auto-reveal the roster
+  // and Solo/Duo/etc. don't, without the team having to pick it manually.
+  let currentTournamentsMap = {};
+  selectEl.addEventListener("change", () => {
+    const t = currentTournamentsMap[selectEl.value];
+    if (!t || !t.format) return;
+    const options = Array.from(formatSelect.options).map(o => o.value.toLowerCase());
+    const idx = options.indexOf(t.format.trim().toLowerCase());
+    if (idx !== -1) {
+      formatSelect.value = formatSelect.options[idx].value;
+      toggleSquadRoster();
+    }
+  });
+
   loadTournamentOptions("freefire", selectEl, listEl).then(map => {
+    currentTournamentsMap = map;
     countLabel.textContent = `${Object.keys(map).length} LIVE`;
     initRegistrationForm("freefire", form, map, msgEl);
   });
 </script>
+<script src="../js/aura-bg.js"></script>
+<script src="../js/install-btn.js"></script>
 </body>
   </html>
