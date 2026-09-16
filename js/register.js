@@ -115,9 +115,6 @@ export async function loadTournamentOptions(gameId, selectEl, listEl) {
 
 /* ---------------------------------------------------------
    Wire up a registration form.
-   formEl must contain fields with these names:
-   tournamentId, teamName, format, leaderName, leaderUID,
-   whatsapp, instagram, telegram, discord, code (optional), logo (file input)
 --------------------------------------------------------- */
 export function initRegistrationForm(gameId, formEl, tournamentsMap, msgEl) {
   const logoInput = formEl.querySelector('[name="logo"]');
@@ -161,15 +158,14 @@ export function initRegistrationForm(gameId, formEl, tournamentsMap, msgEl) {
     const submitBtn = formEl.querySelector('[type="submit"]');
     const data = Object.fromEntries(new FormData(formEl).entries());
 
-    // 2-of-3 rule: WhatsApp is required separately; need >=2 of Instagram/Telegram/Discord... 
-    // per spec: WhatsApp required, PLUS at least 2 of {Instagram, Telegram, Discord}
-    const optionalContacts = [data.instagram, data.telegram, data.discord].filter(v => v && v.trim());
+    // WhatsApp is required separately; need >=2 of the other optional platforms
+    const optionalContacts = [data.instagram, data.telegram, data.discord, data.tiktok, data.facebook, data.twitter].filter(v => v && v.trim());
     if (!data.whatsapp || !data.whatsapp.trim()) {
       showMsg("WhatsApp number is required.", "error");
       return;
     }
     if (optionalContacts.length < 2) {
-      showMsg("Please provide at least 2 of: Instagram, Telegram, Discord.", "error");
+      showMsg("Please provide at least 2 of: Instagram, Telegram, Discord, TikTok, Facebook, Twitter/X.", "error");
       return;
     }
     if (!compressedLogoBlob) {
@@ -212,6 +208,16 @@ export function initRegistrationForm(gameId, formEl, tournamentsMap, msgEl) {
       await uploadBytes(storageRef, compressedLogoBlob);
       const logoUrl = await getDownloadURL(storageRef);
 
+      // Squad member fields (player1_ign/player1_uid, sub1_ign/sub1_uid, etc.)
+      // are captured generically by name pattern, so this works for any
+      // game's squad-size fields without needing per-game code here.
+      const squadFields = {};
+      Object.keys(data).forEach(key => {
+        if (/^(player\d+_(ign|uid)|sub\d+_(ign|uid))$/.test(key) && data[key]) {
+          squadFields[key] = data[key];
+        }
+      });
+
       await addDoc(collection(db, "registrations"), {
         game: gameId,
         tournamentId,
@@ -223,7 +229,11 @@ export function initRegistrationForm(gameId, formEl, tournamentsMap, msgEl) {
         instagram: data.instagram || "",
         telegram: data.telegram || "",
         discord: data.discord || "",
+        tiktok: data.tiktok || "",
+        facebook: data.facebook || "",
+        twitter: data.twitter || "",
         logoUrl,
+        ...squadFields,
         createdAt: serverTimestamp()
       });
 
@@ -240,4 +250,4 @@ export function initRegistrationForm(gameId, formEl, tournamentsMap, msgEl) {
       submitBtn.textContent = "Submit Registration";
     }
   });
-}
+          }
